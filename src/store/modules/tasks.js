@@ -1,12 +1,4 @@
-//import axios from 'axios'
-// IMPORTEZ LE MOCK API ET LA LOGIQUE DE LOGIN POUR OBTENIR L'ID UTILISATEUR
-import {
-  mockFetchTasks,
-  mockAddTask,
-  mockToggleTaskCompletion,
-  mockDeleteTask,
-} from '@/api/mockApi'
-import store from '@/store' // Importe le store global pour accéder au module login
+import axios from 'axios'
 const state = {
   tasks: [],
   loading: false,
@@ -48,11 +40,7 @@ const actions = {
     commit('SET_LOADING', true)
     commit('SET_ERROR', null)
     try {
-      //const response = await axios.get('/tasks')
-      // Pour le mock, on simule l'ID utilisateur 1.
-      // Dans un vrai scénario, vous récupéreriez l'ID de l'utilisateur connecté depuis le store 'login'.
-      const userId = store.getters['login/currentUser']?.id || 1 // Utilise l'ID réel si dispo, sinon 1 pour le mock
-      const response = await mockFetchTasks(userId)
+      const response = await axios.get('/tasks')
       commit('SET_TASKS', response.data)
     } catch (err) {
       commit('SET_ERROR', err.response?.data?.message || 'Erreur lors du chargement des tâches.')
@@ -66,9 +54,7 @@ const actions = {
     commit('SET_LOADING', true)
     commit('SET_ERROR', null)
     try {
-      //const response = await axios.post('/tasks', { title })
-      const userId = store.getters['login/currentUser']?.id || 1
-      const response = await mockAddTask(title, userId)
+      const response = await axios.post('/tasks', { title })
       commit('ADD_TASK', response.data)
       return true
     } catch (err) {
@@ -84,10 +70,8 @@ const actions = {
     commit('SET_LOADING', true)
     commit('SET_ERROR', null)
     try {
-      //const updatedTask = { ...task, completed: !task.completed }
-      //const response = await axios.put(`/tasks/${task.id}`, updatedTask)
-      const userId = store.getters['login/currentUser']?.id || 1
-      const response = await mockToggleTaskCompletion(task.id, !task.completed, userId)
+      const updatedTask = { ...task, completed: !task.completed }
+      const response = await axios.put(`/tasks/${task.id}`, updatedTask)
       commit('UPDATE_TASK', response.data)
     } catch (err) {
       commit(
@@ -104,9 +88,7 @@ const actions = {
     commit('SET_LOADING', true)
     commit('SET_ERROR', null)
     try {
-      //await axios.delete(`/tasks/${taskId}`)
-      const userId = store.getters['login/currentUser']?.id || 1
-      await mockDeleteTask(taskId, userId)
+      await axios.delete(`/tasks/${taskId}`)
       commit('REMOVE_TASK', taskId)
     } catch (err) {
       commit(
