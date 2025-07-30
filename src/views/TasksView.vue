@@ -1,55 +1,75 @@
 <template>
-  <div class="task-view">
-    <div class="tasks-container">
-      <!-- Header -->
-      <header class="tasks-header">
-        <h1>
-          Vos Tâches
-          <span v-if="currentUser" class="username">{{ currentUser.username }}</span>
-        </h1>
-        <button @click="logout" class="logout-btn">⏻</button>
-      </header>
+  <div :class="['task-view', darkMode ? 'dark' : '']">
+    <!-- HEADER -->
+    <header class="header">
+      <div class="user-info">
+        <div class="avatar">{{ currentUser?.username[0].toUpperCase() }}</div>
+        <div>
+          <h1>
+            Bonjour, <span>{{ currentUser?.username }}</span> 👋
+          </h1>
+          <p>{{ completedCount }} / {{ allTasks.length }} tâches complétées</p>
+        </div>
+      </div>
+      <div class="header-actions">
+        <button @click="toggleDarkMode" class="btn-mode">
+          {{ darkMode ? '☀️' : '🌙' }}
+        </button>
+        <button @click="logout" class="btn-logout">⏻</button>
+      </div>
+    </header>
 
-      <!-- Create Task -->
-      <section class="create-task">
-        <h2>Créer une nouvelle tâche</h2>
-        <form @submit.prevent="handleAddTask" class="task-form">
-          <input
-            type="text"
-            v-model="newTaskTitle"
-            placeholder="Titre de la nouvelle tâche..."
-            required
-          />
-          <button type="submit" :disabled="tasksLoading">
-            {{ tasksLoading ? 'Ajout...' : '✚' }}
-          </button>
-        </form>
-      </section>
-
-      <!-- Loading / Error -->
-      <p v-if="tasksLoading" class="loading-text">Chargement des tâches...</p>
-      <p v-if="tasksError" class="error-text">{{ tasksError }}</p>
-
-      <!-- Task List -->
-      <section class="tasks-list-section">
-        <h2>Liste des tâches</h2>
-        <ul v-if="allTasks.length > 0" class="task-list">
-          <li v-for="task in allTasks" :key="task.id" class="task-item">
-            <span :class="{ completed: task.completed }">{{ task.title }}</span>
-            <div class="task-actions">
-              <button
-                @click="handleToggleTaskCompletion(task)"
-                :class="{ completed: task.completed }"
-              >
-                {{ task.completed ? 'À faire' : 'Terminer' }}
-              </button>
-              <button @click="handleDeleteTask(task.id)" class="delete-btn">Supprimer</button>
-            </div>
-          </li>
-        </ul>
-        <p v-else class="empty-text">Aucune tâche pour le moment. Ajoutez-en une !</p>
-      </section>
+    <!-- BARRE DE PROGRESSION -->
+    <div class="progress-bar">
+      <div class="progress" :style="{ width: progressPercent + '%' }"></div>
     </div>
+
+    <!-- AJOUTER TÂCHE -->
+    <div class="add-task">
+      <input
+        v-model="newTaskTitle"
+        type="text"
+        placeholder="Nouvelle tâche..."
+        @keyup.enter="handleAddTask"
+      />
+      <button @click="handleAddTask" :disabled="tasksLoading" class="btn-add">+</button>
+    </div>
+
+    <!-- FILTRES -->
+    <div class="filters">
+      <button :class="{ active: filter === 'all' }" @click="filter = 'all'">Toutes</button>
+      <button :class="{ active: filter === 'active' }" @click="filter = 'active'">À faire</button>
+      <button :class="{ active: filter === 'completed' }" @click="filter = 'completed'">
+        Terminées
+      </button>
+    </div>
+
+    <!-- LISTE DES TÂCHES -->
+    <transition-group name="fade" tag="ul" class="task-list">
+      <li
+        v-for="task in filteredTasks"
+        :key="task.id"
+        class="task-card"
+        :class="{ completed: task.completed }"
+      >
+        <div class="task-content">
+          <input
+            type="checkbox"
+            v-model="task.completed"
+            @change="handleToggleTaskCompletion(task)"
+          />
+          <span>{{ task.title }}</span>
+        </div>
+        <button @click="handleDeleteTask(task.id)" class="btn-delete">🗑</button>
+      </li>
+    </transition-group>
+
+    <!-- MESSAGES -->
+    <p v-if="tasksLoading" class="info-message">Chargement...</p>
+    <p v-if="!tasksLoading && filteredTasks.length === 0" class="info-message">
+      Aucune tâche ici. Ajoutez-en une ! 😉
+    </p>
+    <p v-if="tasksError" class="error-message">{{ tasksError }}</p>
   </div>
 </template>
 
@@ -59,11 +79,24 @@ import { useStore } from 'vuex'
 
 const store = useStore()
 const newTaskTitle = ref('')
+const filter = ref('all')
+const darkMode = ref(false)
 
 const currentUser = computed(() => store.getters['login/currentUser'])
 const allTasks = computed(() => store.getters['tasks/allTasks'])
 const tasksLoading = computed(() => store.getters['tasks/tasksLoading'])
 const tasksError = computed(() => store.getters['tasks/tasksError'])
+
+const filteredTasks = computed(() => {
+  if (filter.value === 'active') return allTasks.value.filter((t) => !t.completed)
+  if (filter.value === 'completed') return allTasks.value.filter((t) => t.completed)
+  return allTasks.value
+})
+
+const completedCount = computed(() => allTasks.value.filter((t) => t.completed).length)
+const progressPercent = computed(() =>
+  allTasks.value.length > 0 ? (completedCount.value / allTasks.value.length) * 100 : 0,
+)
 
 async function handleAddTask() {
   if (!newTaskTitle.value.trim()) return
@@ -76,13 +109,17 @@ function handleToggleTaskCompletion(task) {
 }
 
 function handleDeleteTask(taskId) {
-  if (confirm('Êtes-vous sûr de vouloir supprimer cette tâche ?')) {
+  if (confirm('Supprimer cette tâche ?')) {
     store.dispatch('tasks/deleteTask', taskId)
   }
 }
 
 function logout() {
   store.dispatch('login/logout')
+}
+
+function toggleDarkMode() {
+  darkMode.value = !darkMode.value
 }
 
 onMounted(() => {
@@ -94,133 +131,194 @@ onMounted(() => {
 
 <style scoped>
 .task-view {
-  display: flex;
-  justify-content: center;
+  max-width: 800px;
+  margin: auto;
   padding: 30px;
+  font-family: 'Poppins', sans-serif;
+  background: #f7f9fc;
   min-height: 100vh;
-  background: #f5f6fa;
+  transition:
+    background 0.3s ease,
+    color 0.3s ease;
+}
+.task-view.dark {
+  background: #1e1e1e;
+  color: #f5f5f5;
 }
 
-.tasks-container {
-  width: 100%;
-  max-width: 700px;
-  background: #fff;
-  border-radius: 12px;
-  padding: 25px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-}
-
-/* Header */
-.tasks-header {
+/* HEADER */
+.header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 25px;
+  margin-bottom: 30px;
 }
-.tasks-header h1 {
-  font-size: 1.8em;
+.user-info {
+  display: flex;
+  align-items: center;
+  gap: 15px;
 }
-.username {
+.user-info h1 {
+  font-size: 1.6em;
+  font-weight: 600;
+}
+.user-info span {
   color: #007bff;
-  margin-left: 10px;
-  font-weight: 500;
 }
-.logout-btn {
-  background: #dc3545;
-  border: none;
+.user-info p {
+  font-size: 0.9em;
+  color: #888;
+}
+.avatar {
+  width: 50px;
+  height: 50px;
+  background: #007bff;
   color: white;
-  padding: 8px 12px;
-  border-radius: 6px;
-  cursor: pointer;
-  transition: 0.2s;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
 }
-.logout-btn:hover {
-  background: #c82333;
-}
-
-/* Create Task */
-.create-task h2 {
-  font-size: 1.4em;
-  margin-bottom: 15px;
-}
-.task-form {
+.header-actions {
   display: flex;
   gap: 10px;
 }
-.task-form input {
-  flex: 1;
-  padding: 10px;
-  border-radius: 6px;
-  border: 1px solid #ccc;
+.btn-mode {
+  background: #333;
+  border: none;
+  padding: 8px 12px;
+  border-radius: 8px;
+  color: white;
+  font-size: 18px;
+  cursor: pointer;
 }
-.task-form button {
-  padding: 10px 14px;
+.btn-logout {
+  background: #ff4d4d;
+  border: none;
+  padding: 8px 12px;
+  border-radius: 8px;
+  color: white;
+  font-size: 18px;
+  cursor: pointer;
+}
+
+/* PROGRESSION */
+.progress-bar {
+  width: 100%;
+  height: 10px;
+  background: #ddd;
+  border-radius: 8px;
+  overflow: hidden;
+  margin-bottom: 20px;
+}
+.progress {
+  height: 100%;
   background: #007bff;
+  transition: width 0.3s ease;
+}
+
+/* AJOUTER TÂCHE */
+.add-task {
+  display: flex;
+  margin-bottom: 20px;
+}
+.add-task input {
+  flex: 1;
+  padding: 12px;
+  border-radius: 10px;
+  border: 1px solid #ddd;
+  font-size: 1em;
+}
+.btn-add {
+  background: #28a745;
   color: white;
   border: none;
-  border-radius: 6px;
+  padding: 0 20px;
+  font-size: 1.8em;
+  margin-left: 10px;
+  border-radius: 10px;
   cursor: pointer;
-  transition: 0.2s;
-}
-.task-form button:disabled {
-  background: #7ab6ff;
-  cursor: not-allowed;
-}
-.task-form button:hover:not(:disabled) {
-  background: #0056b3;
 }
 
-/* Messages */
-.loading-text,
-.error-text,
-.empty-text {
-  margin-top: 15px;
-  text-align: center;
+/* FILTRES */
+.filters {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 20px;
+  gap: 10px;
 }
-.error-text {
-  color: red;
+.filters button {
+  padding: 8px 14px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  background: #f1f1f1;
+  cursor: pointer;
+}
+.filters .active {
+  background: #007bff;
+  color: white;
 }
 
-/* Task List */
-.tasks-list-section h2 {
-  font-size: 1.4em;
-  margin: 30px 0 15px;
-}
+/* LISTE */
 .task-list {
   list-style: none;
   padding: 0;
-  margin: 0;
 }
-.task-item {
+.task-card {
+  background: white;
+  padding: 15px;
+  border-radius: 12px;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 12px;
-  margin-bottom: 10px;
-  background: #f8f8f8;
-  border-radius: 6px;
+  margin-bottom: 12px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+  transition: all 0.3s ease;
 }
-.task-item span.completed {
+.task-card.completed {
+  opacity: 0.6;
   text-decoration: line-through;
-  color: #777;
 }
-.task-actions button {
-  margin-left: 8px;
-  padding: 6px 10px;
+.task-card:hover {
+  transform: scale(1.02);
+}
+.task-content {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.btn-delete {
+  background: none;
   border: none;
-  border-radius: 6px;
+  font-size: 18px;
+  color: #ff4d4d;
   cursor: pointer;
-  transition: 0.2s;
 }
-.task-actions button.completed {
-  background: #ffc107;
-  color: #222;
+
+/* ANIMATIONS */
+.fade-enter-active,
+.fade-leave-active {
+  transition: all 0.4s ease;
 }
-.task-actions .delete-btn {
-  background: #dc3545;
-  color: white;
+.fade-enter-from {
+  opacity: 0;
+  transform: translateY(-10px);
 }
-.task-actions .delete-btn:hover {
-  background: #c82333;
+.fade-leave-to {
+  opacity: 0;
+  transform: translateY(10px);
+}
+
+/* MESSAGES */
+.info-message {
+  text-align: center;
+  color: #888;
+  margin-top: 20px;
+}
+.error-message {
+  text-align: center;
+  color: #ff4d4d;
+  margin-top: 20px;
 }
 </style>

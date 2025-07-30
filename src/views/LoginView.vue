@@ -1,39 +1,30 @@
 <template>
-  <div class="login-view">
-    <div class="form-container">
-      <h1 class="form-title">Bienvenue sur votre Todo-list App</h1>
-      <h2 class="form-subtitle">Connectez-vous pour continuer</h2>
-
-      <form @submit.prevent="handleLogin">
-        <!-- Email -->
+  <div :class="['auth-view', darkMode ? 'dark' : '']">
+    <div class="auth-card">
+      <h1>Bienvenue 👋</h1>
+      <p class="subtitle">Connectez-vous pour accéder à vos tâches</p>
+      <form @submit.prevent="handleLogin" class="auth-form">
         <div class="form-group">
-          <label for="email">Email</label>
-          <input type="email" id="email" v-model="email" placeholder="votre@email.com" required />
+          <label>Email</label>
+          <input type="email" v-model="email" placeholder="votre@email.com" required />
         </div>
-
-        <!-- Password -->
         <div class="form-group">
-          <label for="password">Mot de passe</label>
-          <input type="password" id="password" v-model="password" placeholder="********" required />
+          <label>Mot de passe</label>
+          <input type="password" v-model="password" placeholder="********" required />
         </div>
-
-        <!-- Error message -->
         <p v-if="authError" class="error-message">{{ authError }}</p>
-
-        <!-- Submit -->
-        <div class="form-group">
-          <button type="submit" :disabled="authLoading" class="btn-submit">
-            {{ authLoading ? 'Connexion...' : 'Se connecter' }}
-          </button>
-        </div>
-
-        <!-- Register link -->
-        <p class="register-text">
+        <button type="submit" :disabled="authLoading" class="btn-primary">
+          {{ authLoading ? 'Connexion...' : 'Se connecter' }}
+        </button>
+        <p class="bottom-text">
           Pas encore de compte ?
-          <router-link to="/register" class="text-link">Inscrivez-vous</router-link>
+          <router-link to="/register">Inscrivez-vous</router-link>
         </p>
       </form>
     </div>
+    <button @click="toggleDarkMode" class="btn-mode">
+      {{ darkMode ? '☀️' : '🌙' }}
+    </button>
   </div>
 </template>
 
@@ -46,6 +37,7 @@ const email = ref('')
 const password = ref('')
 const store = useStore()
 const router = useRouter()
+const darkMode = ref(false)
 
 const authLoading = computed(() => store.getters['login/loading'])
 const authError = computed(() => store.getters['login/error'])
@@ -55,104 +47,118 @@ async function handleLogin() {
     email: email.value,
     password: password.value,
   })
-  if (success) {
-    router.push('/tasks')
-  }
+  if (success) router.push('/tasks')
+}
+function toggleDarkMode() {
+  darkMode.value = !darkMode.value
 }
 </script>
 
 <style scoped>
-.login-view {
+.auth-view {
   display: flex;
   justify-content: center;
   align-items: center;
   min-height: 100vh;
-  background: #f5f6fa;
+  background: #f7f9fc;
+  font-family: 'Poppins', sans-serif;
+  transition: background 0.3s ease;
 }
-
-.form-container {
+.auth-view.dark {
+  background: #1e1e1e;
+  color: #f5f5f5;
+}
+.auth-card {
+  background: white;
+  padding: 40px;
+  border-radius: 16px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
   width: 100%;
-  max-width: 420px;
-  background: #fff;
-  padding: 12px 40px 30px 25px;
-  border-radius: 20px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  max-width: 400px;
   text-align: center;
+  transition: background 0.3s ease;
 }
-
-.form-title {
-  font-size: 1.5em;
+.auth-view.dark .auth-card {
+  background: #2b2b2b;
+}
+h1 {
+  font-size: 1.8em;
   margin-bottom: 10px;
 }
-
-.form-subtitle {
-  font-size: 1em;
-  color: #555;
+.subtitle {
+  color: #666;
   margin-bottom: 25px;
 }
-
+.auth-view.dark .subtitle {
+  color: #aaa;
+}
+.auth-form {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
 .form-group {
-  margin-bottom: 18px;
   text-align: left;
 }
-
-label {
-  font-weight: 500;
-  display: block;
-  margin-bottom: 6px;
+.form-group label {
+  font-size: 0.9em;
+  color: #555;
 }
-
+.auth-view.dark .form-group label {
+  color: #ccc;
+}
 input {
   width: 100%;
-  padding: 10px;
-  border-radius: 6px;
-  border: 1px solid #ccc;
-  transition: 0.2s;
-}
-input:focus {
-  outline: none;
-  border-color: #0056b3;
-  box-shadow: 0 0 5px rgba(0, 123, 255, 0.3);
-}
-
-.btn-submit {
-  width: 100%;
   padding: 12px;
-  background: #0057b4;
+  border: 1px solid #ddd;
+  border-radius: 10px;
+  font-size: 1em;
+  outline: none;
+}
+.auth-view.dark input {
+  background: #3a3a3a;
+  border: 1px solid #555;
   color: white;
+}
+.btn-primary {
+  background: #007bff;
+  color: white;
+  padding: 12px;
   border: none;
-  border-radius: 6px;
+  border-radius: 10px;
   font-size: 1em;
   cursor: pointer;
-  transition: background 0.2s;
+  transition: background 0.2s ease;
 }
-.btn-submit:hover:not(:disabled) {
+.btn-primary:hover {
   background: #0056b3;
 }
-.btn-submit:disabled {
-  background: #6494cf;
-  cursor: not-allowed;
-}
-
 .error-message {
-  color: red;
+  color: #ff4d4d;
   font-size: 0.9em;
-  text-align: center;
-  margin-bottom: 12px;
 }
-
-.register-text {
-  text-align: center;
+.bottom-text {
+  margin-top: 15px;
+  font-size: 0.9em;
   color: #666;
-  font-size: 0.9em;
-  margin-top: 20px;
 }
-
-.text-link {
-  color: #005abb;
+.auth-view.dark .bottom-text {
+  color: #bbb;
+}
+.bottom-text a {
+  color: #007bff;
   text-decoration: none;
 }
-.text-link:hover {
-  text-decoration: underline;
+.btn-mode {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  background: #333;
+  border: none;
+  padding: 8px 12px;
+  border-radius: 8px;
+  color: white;
+  font-size: 18px;
+  cursor: pointer;
 }
 </style>
