@@ -1,6 +1,5 @@
 <template>
   <div :class="['task-view', darkMode ? 'dark' : '']">
-    <!-- HEADER -->
     <header class="header">
       <div class="user-info">
         <div class="avatar">{{ currentUser?.username[0].toUpperCase() }}</div>
@@ -19,12 +18,10 @@
       </div>
     </header>
 
-    <!-- BARRE DE PROGRESSION -->
     <div class="progress-bar">
       <div class="progress" :style="{ width: progressPercent + '%' }"></div>
     </div>
 
-    <!-- AJOUTER TÂCHE -->
     <div class="add-task">
       <input
         v-model="newTaskTitle"
@@ -35,7 +32,6 @@
       <button @click="handleAddTask" :disabled="tasksLoading" class="btn-add">+</button>
     </div>
 
-    <!-- FILTRES -->
     <div class="filters">
       <button :class="{ active: filter === 'all' }" @click="filter = 'all'">Toutes</button>
       <button :class="{ active: filter === 'active' }" @click="filter = 'active'">À faire</button>
@@ -44,7 +40,6 @@
       </button>
     </div>
 
-    <!-- LISTE DES TÂCHES -->
     <transition-group name="fade" tag="ul" class="task-list">
       <li
         v-for="task in filteredTasks"
@@ -64,7 +59,6 @@
       </li>
     </transition-group>
 
-    <!-- MESSAGES -->
     <p v-if="tasksLoading" class="info-message">Chargement...</p>
     <p v-if="!tasksLoading && filteredTasks.length === 0" class="info-message">
       Aucune tâche ici. Ajoutez-en une ! 😉
@@ -80,7 +74,7 @@ import { useStore } from 'vuex'
 const store = useStore()
 const newTaskTitle = ref('')
 const filter = ref('all')
-const darkMode = ref(false)
+const darkMode = ref(true)
 
 const currentUser = computed(() => store.getters['login/currentUser'])
 const allTasks = computed(() => store.getters['tasks/allTasks'])
@@ -131,7 +125,7 @@ onMounted(() => {
 
 <style scoped>
 .task-view {
-  max-width: 800px;
+  max-width: 100%;
   margin: auto;
   padding: 30px;
   font-family: 'Poppins', sans-serif;
@@ -146,7 +140,6 @@ onMounted(() => {
   color: #f5f5f5;
 }
 
-/* HEADER */
 .header {
   display: flex;
   justify-content: space-between;
@@ -203,7 +196,6 @@ onMounted(() => {
   cursor: pointer;
 }
 
-/* PROGRESSION */
 .progress-bar {
   width: 100%;
   height: 10px;
@@ -218,7 +210,6 @@ onMounted(() => {
   transition: width 0.3s ease;
 }
 
-/* AJOUTER TÂCHE */
 .add-task {
   display: flex;
   margin-bottom: 20px;
@@ -241,7 +232,6 @@ onMounted(() => {
   cursor: pointer;
 }
 
-/* FILTRES */
 .filters {
   display: flex;
   justify-content: center;
@@ -260,7 +250,6 @@ onMounted(() => {
   color: white;
 }
 
-/* LISTE */
 .task-list {
   list-style: none;
   padding: 0;
@@ -296,7 +285,6 @@ onMounted(() => {
   cursor: pointer;
 }
 
-/* ANIMATIONS */
 .fade-enter-active,
 .fade-leave-active {
   transition: all 0.4s ease;
@@ -310,7 +298,6 @@ onMounted(() => {
   transform: translateY(10px);
 }
 
-/* MESSAGES */
 .info-message {
   text-align: center;
   color: #888;

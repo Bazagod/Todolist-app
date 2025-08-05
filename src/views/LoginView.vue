@@ -37,7 +37,7 @@ const email = ref('')
 const password = ref('')
 const store = useStore()
 const router = useRouter()
-const darkMode = ref(false)
+const darkMode = ref(true)
 
 const authLoading = computed(() => store.getters['login/loading'])
 const authError = computed(() => store.getters['login/error'])
@@ -71,7 +71,7 @@ function toggleDarkMode() {
 .auth-card {
   background: white;
   padding: 40px;
-  border-radius: 16px;
+  border-radius: 20px;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
   width: 100%;
   max-width: 400px;
