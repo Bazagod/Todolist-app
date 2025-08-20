@@ -1,19 +1,16 @@
 <template>
-  <div :class="['task-view', darkMode ? 'dark' : '']">
+  <div class="task-view">
     <header class="header">
       <div class="user-info">
-        <div class="avatar">{{ currentUser?.username[0].toUpperCase() }}</div>
+        <div class="avatar">{{ currentUser?.name[0].toUpperCase() }}</div>
         <div>
           <h1>
-            Bonjour, <span>{{ currentUser?.username }}</span> 👋
+            Bonjour, <span>{{ currentUser?.name }}</span> 👋
           </h1>
           <p>{{ completedCount }} / {{ allTasks.length }} tâches complétées</p>
         </div>
       </div>
       <div class="header-actions">
-        <button @click="toggleDarkMode" class="btn-mode">
-          {{ darkMode ? '☀️' : '🌙' }}
-        </button>
         <button @click="logout" class="btn-logout">⏻</button>
       </div>
     </header>
@@ -33,10 +30,13 @@
     </div>
 
     <div class="filters">
-      <button :class="{ active: filter === 'all' }" @click="filter = 'all'">Toutes</button>
-      <button :class="{ active: filter === 'active' }" @click="filter = 'active'">À faire</button>
-      <button :class="{ active: filter === 'completed' }" @click="filter = 'completed'">
-        Terminées
+      <button
+        v-for="f in ['all', 'active', 'completed']"
+        :key="f"
+        :class="{ active: filter === f }"
+        @click="filter = f"
+      >
+        {{ f === 'all' ? 'Toutes' : f === 'active' ? 'À faire' : 'Terminées' }}
       </button>
     </div>
 
@@ -45,22 +45,29 @@
         v-for="task in filteredTasks"
         :key="task.id"
         class="task-card"
-        :class="{ completed: task.completed }"
+        :class="{ completed: task.status === 'completed' }"
       >
         <div class="task-content">
           <input
             type="checkbox"
-            v-model="task.completed"
+            :checked="task.status === 'completed'"
             @change="handleToggleTaskCompletion(task)"
           />
           <span>{{ task.title }}</span>
         </div>
-        <button @click="handleDeleteTask(task.id)" class="btn-delete">🗑</button>
+
+        <button
+          class="btn-delete"
+          @click.stop="handleDeleteTask(task.id)"
+          title="Supprimer la tâche"
+        >
+          🗑
+        </button>
       </li>
     </transition-group>
 
     <p v-if="tasksLoading" class="info-message">Chargement...</p>
-    <p v-if="!tasksLoading && filteredTasks.length === 0" class="info-message">
+    <p v-else-if="!filteredTasks.length" class="info-message">
       Aucune tâche ici. Ajoutez-en une ! 😉
     </p>
     <p v-if="tasksError" class="error-message">{{ tasksError }}</p>
@@ -74,7 +81,6 @@ import { useStore } from 'vuex'
 const store = useStore()
 const newTaskTitle = ref('')
 const filter = ref('all')
-const darkMode = ref(true)
 
 const currentUser = computed(() => store.getters['login/currentUser'])
 const allTasks = computed(() => store.getters['tasks/allTasks'])
@@ -82,38 +88,42 @@ const tasksLoading = computed(() => store.getters['tasks/tasksLoading'])
 const tasksError = computed(() => store.getters['tasks/tasksError'])
 
 const filteredTasks = computed(() => {
-  if (filter.value === 'active') return allTasks.value.filter((t) => !t.completed)
-  if (filter.value === 'completed') return allTasks.value.filter((t) => t.completed)
+  if (!Array.isArray(allTasks.value)) return []
+  if (filter.value === 'active') {
+    return allTasks.value.filter((t) => t.status === 'pending')
+  } else if (filter.value === 'completed') {
+    return allTasks.value.filter((t) => t.status === 'completed')
+  }
   return allTasks.value
 })
 
-const completedCount = computed(() => allTasks.value.filter((t) => t.completed).length)
+const completedCount = computed(() => {
+  if (!Array.isArray(allTasks.value)) return 0
+  return allTasks.value.filter((t) => t.status === 'completed').length
+})
+
 const progressPercent = computed(() =>
-  allTasks.value.length > 0 ? (completedCount.value / allTasks.value.length) * 100 : 0,
+  allTasks.value.length ? (completedCount.value / allTasks.value.length) * 100 : 0,
 )
 
 async function handleAddTask() {
   if (!newTaskTitle.value.trim()) return
-  const success = await store.dispatch('tasks/addTask', newTaskTitle.value)
-  if (success) newTaskTitle.value = ''
+  const ok = await store.dispatch('tasks/addTask', newTaskTitle.value)
+  if (ok) newTaskTitle.value = ''
 }
 
 function handleToggleTaskCompletion(task) {
   store.dispatch('tasks/toggleTaskCompletion', task)
 }
 
-function handleDeleteTask(taskId) {
+function handleDeleteTask(id) {
+  console.log('Suppression demandée pour id=', id)
   if (confirm('Supprimer cette tâche ?')) {
-    store.dispatch('tasks/deleteTask', taskId)
+    store.dispatch('tasks/deleteTask', id)
   }
 }
-
 function logout() {
   store.dispatch('login/logout')
-}
-
-function toggleDarkMode() {
-  darkMode.value = !darkMode.value
 }
 
 onMounted(() => {
@@ -131,15 +141,12 @@ onMounted(() => {
   font-family: 'Poppins', sans-serif;
   background: #f7f9fc;
   min-height: 100vh;
-  transition:
-    background 0.3s ease,
-    color 0.3s ease;
+  transition: 0.3s;
 }
 .task-view.dark {
   background: #1e1e1e;
   color: #f5f5f5;
 }
-
 .header {
   display: flex;
   justify-content: space-between;
@@ -166,7 +173,7 @@ onMounted(() => {
   width: 50px;
   height: 50px;
   background: #007bff;
-  color: white;
+  color: #fff;
   border-radius: 50%;
   display: flex;
   align-items: center;
@@ -177,25 +184,15 @@ onMounted(() => {
   display: flex;
   gap: 10px;
 }
-.btn-mode {
-  background: #333;
-  border: none;
-  padding: 8px 12px;
-  border-radius: 8px;
-  color: white;
-  font-size: 18px;
-  cursor: pointer;
-}
 .btn-logout {
   background: #ff4d4d;
   border: none;
   padding: 8px 12px;
   border-radius: 8px;
-  color: white;
+  color: #fff;
   font-size: 18px;
   cursor: pointer;
 }
-
 .progress-bar {
   width: 100%;
   height: 10px;
@@ -207,9 +204,8 @@ onMounted(() => {
 .progress {
   height: 100%;
   background: #007bff;
-  transition: width 0.3s ease;
+  transition: 0.3s;
 }
-
 .add-task {
   display: flex;
   margin-bottom: 20px;
@@ -223,7 +219,7 @@ onMounted(() => {
 }
 .btn-add {
   background: #28a745;
-  color: white;
+  color: #fff;
   border: none;
   padding: 0 20px;
   font-size: 1.8em;
@@ -231,7 +227,6 @@ onMounted(() => {
   border-radius: 10px;
   cursor: pointer;
 }
-
 .filters {
   display: flex;
   justify-content: center;
@@ -247,15 +242,14 @@ onMounted(() => {
 }
 .filters .active {
   background: #007bff;
-  color: white;
+  color: #fff;
 }
-
 .task-list {
   list-style: none;
   padding: 0;
 }
 .task-card {
-  background: white;
+  background: #fff;
   padding: 15px;
   border-radius: 12px;
   display: flex;
@@ -263,7 +257,7 @@ onMounted(() => {
   align-items: center;
   margin-bottom: 12px;
   box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
-  transition: all 0.3s ease;
+  transition: 0.3s;
 }
 .task-card.completed {
   opacity: 0.6;
@@ -281,13 +275,14 @@ onMounted(() => {
   background: none;
   border: none;
   font-size: 18px;
-  color: #ff4d4d;
+  color: #ff4444;
   cursor: pointer;
+  margin-left: 8px;
 }
 
 .fade-enter-active,
 .fade-leave-active {
-  transition: all 0.4s ease;
+  transition: 0.4s;
 }
 .fade-enter-from {
   opacity: 0;
@@ -297,7 +292,6 @@ onMounted(() => {
   opacity: 0;
   transform: translateY(10px);
 }
-
 .info-message {
   text-align: center;
   color: #888;

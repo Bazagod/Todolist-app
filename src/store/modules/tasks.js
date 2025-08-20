@@ -1,4 +1,5 @@
 import axios from 'axios'
+
 const state = {
   tasks: [],
   loading: false,
@@ -6,7 +7,7 @@ const state = {
 }
 
 const getters = {
-  allTasks: (state) => state.tasks,
+  allTasks: (state) => (Array.isArray(state.tasks) ? state.tasks : []),
   tasksLoading: (state) => state.loading,
   tasksError: (state) => state.error,
 }
@@ -19,7 +20,7 @@ const mutations = {
     state.error = message
   },
   SET_TASKS(state, tasks) {
-    state.tasks = tasks
+    state.tasks = Array.isArray(tasks) ? tasks : []
   },
   ADD_TASK(state, task) {
     state.tasks.push(task)
@@ -41,10 +42,10 @@ const actions = {
     commit('SET_ERROR', null)
     try {
       const response = await axios.get('/tasks')
-      commit('SET_TASKS', response.data)
+      commit('SET_TASKS', response.data.data ?? response.data)
     } catch (err) {
       commit('SET_ERROR', err.response?.data?.message || 'Erreur lors du chargement des tâches.')
-      console.error(err)
+      commit('SET_TASKS', [])
     } finally {
       commit('SET_LOADING', false)
     }
@@ -54,12 +55,14 @@ const actions = {
     commit('SET_LOADING', true)
     commit('SET_ERROR', null)
     try {
-      const response = await axios.post('/tasks', { title })
+      const response = await axios.post('/tasks', {
+        title,
+        status: 'pending',
+      }) // 🔥 corrigé
       commit('ADD_TASK', response.data)
       return true
     } catch (err) {
       commit('SET_ERROR', err.response?.data?.message || "Erreur lors de l'ajout de la tâche.")
-      console.error(err)
       return false
     } finally {
       commit('SET_LOADING', false)
@@ -70,15 +73,15 @@ const actions = {
     commit('SET_LOADING', true)
     commit('SET_ERROR', null)
     try {
-      const updatedTask = { ...task, completed: !task.completed }
-      const response = await axios.put(`/tasks/${task.id}`, updatedTask)
+      const updatedTask = {
+        ...task,
+        status: task.status === 'completed' ? 'pending' : 'completed',
+      }
+
+      const response = await axios.put(`/tasks/${task.id}`, updatedTask) //
       commit('UPDATE_TASK', response.data)
     } catch (err) {
-      commit(
-        'SET_ERROR',
-        err.response?.data?.message || 'Erreur lors de la mise à jour de la tâche.',
-      )
-      console.error(err)
+      commit('SET_ERROR', err.response?.data?.message || 'Erreur lors de la mise à jour.')
     } finally {
       commit('SET_LOADING', false)
     }
@@ -90,12 +93,9 @@ const actions = {
     try {
       await axios.delete(`/tasks/${taskId}`)
       commit('REMOVE_TASK', taskId)
+      console.log(`✅ Suppression réussie pour l’ID ${taskId}`)
     } catch (err) {
-      commit(
-        'SET_ERROR',
-        err.response?.data?.message || 'Erreur lors de la suppression de la tâche.',
-      )
-      console.error(err)
+      commit('SET_ERROR', err.response?.data?.message || 'Erreur lors de la suppression.')
     } finally {
       commit('SET_LOADING', false)
     }

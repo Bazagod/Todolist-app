@@ -48,8 +48,9 @@ const actions = {
     try {
       const response = await axios.post('/user/login', credentials)
       console.log(response)
-      commit('SET_TOKEN', response.data.token)
-      commit('SET_USER', response.data.user)
+      commit('SET_TOKEN', response.data.data.token)
+      commit('SET_USER', response.data.data.user)
+
       return true
     } catch (err) {
       commit(
@@ -81,10 +82,17 @@ const actions = {
   },
 
   logout({ commit }) {
-    commit('CLEAR_LOGIN_STATE')
-    // Si le backend a une route /logout pour invalider le token côté serveur, vous pouvez l'appeler ici:
-    axios.post('/user/logout').catch((error) => console.error('Logout API error:', error))
-    router.push('/login')
+    return axios
+      .post('/user/logout')
+      .then(() => {
+        commit('CLEAR_LOGIN_STATE')
+        router.push('/login')
+      })
+      .catch((error) => {
+        console.error('Logout API error:', error)
+        commit('CLEAR_LOGIN_STATE')
+        router.push('/login')
+      })
   },
 
   async fetchCurrentUser({ commit, state }) {

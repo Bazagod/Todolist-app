@@ -1,5 +1,5 @@
 <template>
-  <div :class="['auth-view', darkMode ? 'dark' : '']">
+  <div :class="['auth-view']">
     <div class="auth-card">
       <h1>Bienvenue 👋</h1>
       <p class="subtitle">Connectez-vous pour accéder à vos tâches</p>
@@ -22,9 +22,6 @@
         </p>
       </form>
     </div>
-    <button @click="toggleDarkMode" class="btn-mode">
-      {{ darkMode ? '☀️' : '🌙' }}
-    </button>
   </div>
 </template>
 
@@ -37,7 +34,6 @@ const email = ref('')
 const password = ref('')
 const store = useStore()
 const router = useRouter()
-const darkMode = ref(true)
 
 const authLoading = computed(() => store.getters['login/loading'])
 const authError = computed(() => store.getters['login/error'])
@@ -48,9 +44,6 @@ async function handleLogin() {
     password: password.value,
   })
   if (success) router.push('/tasks')
-}
-function toggleDarkMode() {
-  darkMode.value = !darkMode.value
 }
 </script>
 

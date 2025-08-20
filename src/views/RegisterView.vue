@@ -1,12 +1,12 @@
 <template>
-  <div :class="['auth-view', darkMode ? 'dark' : '']">
+  <div :class="['auth-view']">
     <div class="auth-card">
       <h1>Créer un compte 📝</h1>
       <p class="subtitle">Rejoignez-nous et gérez vos tâches facilement</p>
-      <form @submit.prevent="handleRegister" class="auth-form">
+      <form @submit.prevent="handleRegister" class="auth-form" method="post">
         <div class="form-group">
           <label>Nom d'utilisateur</label>
-          <input type="text" v-model="username" placeholder="Votre nom" required />
+          <input type="text" v-model="name" placeholder="Votre nom" required />
         </div>
         <div class="form-group">
           <label>Email</label>
@@ -26,9 +26,6 @@
         </p>
       </form>
     </div>
-    <button @click="toggleDarkMode" class="btn-mode">
-      {{ darkMode ? '☀️' : '🌙' }}
-    </button>
   </div>
 </template>
 
@@ -37,19 +34,18 @@ import { ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { useStore } from 'vuex'
 
-const username = ref('')
+const name = ref('')
 const email = ref('')
 const password = ref('')
 const store = useStore()
 const router = useRouter()
-const darkMode = ref(true)
 
 const authLoading = computed(() => store.getters['login/loading'])
 const authError = computed(() => store.getters['login/error'])
 
 async function handleRegister() {
   const success = await store.dispatch('login/register', {
-    username: username.value,
+    name: name.value,
     email: email.value,
     password: password.value,
   })
@@ -57,9 +53,6 @@ async function handleRegister() {
     alert('Inscription réussie ! Vous pouvez maintenant vous connecter.')
     router.push('/login')
   }
-}
-function toggleDarkMode() {
-  darkMode.value = !darkMode.value
 }
 </script>
 
