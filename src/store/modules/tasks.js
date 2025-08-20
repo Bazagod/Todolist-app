@@ -58,7 +58,7 @@ const actions = {
       const response = await axios.post('/tasks', {
         title,
         status: 'pending',
-      }) // 🔥 corrigé
+      })
       commit('ADD_TASK', response.data)
       return true
     } catch (err) {
