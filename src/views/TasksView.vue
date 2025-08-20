@@ -223,7 +223,7 @@ onMounted(() => {
   font-size: 1em;
 }
 .btn-add {
-  background: #28a745;
+  background: #007bff;
   color: #fff;
   border: none;
   padding: 0 20px;
