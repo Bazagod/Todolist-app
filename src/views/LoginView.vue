@@ -1,7 +1,7 @@
 <template>
   <div :class="['auth-view']">
     <div class="auth-card">
-      <h1>Bienvenue 👋</h1>
+      <h1>Bienvenue</h1>
       <p class="subtitle">Connectez-vous pour accéder à vos tâches</p>
       <form @submit.prevent="handleLogin" class="auth-form">
         <div class="form-group">

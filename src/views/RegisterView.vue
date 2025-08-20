@@ -1,7 +1,7 @@
 <template>
   <div :class="['auth-view']">
     <div class="auth-card">
-      <h1>Créer un compte 📝</h1>
+      <h1>Créer un compte</h1>
       <p class="subtitle">Rejoignez-nous et gérez vos tâches facilement</p>
       <form @submit.prevent="handleRegister" class="auth-form" method="post">
         <div class="form-group">

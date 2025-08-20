@@ -5,7 +5,7 @@
         <div class="avatar">{{ currentUser?.name[0].toUpperCase() }}</div>
         <div>
           <h1>
-            Bonjour, <span>{{ currentUser?.name }}</span> 👋
+            Bonjour, <span>{{ currentUser?.name }}</span>
           </h1>
           <p>{{ completedCount }} / {{ allTasks.length }} tâches complétées</p>
         </div>
@@ -67,9 +67,7 @@
     </transition-group>
 
     <p v-if="tasksLoading" class="info-message">Chargement...</p>
-    <p v-else-if="!filteredTasks.length" class="info-message">
-      Aucune tâche ici. Ajoutez-en une ! 😉
-    </p>
+    <p v-else-if="!filteredTasks.length" class="info-message">Aucune tâche ici. Ajoutez-en une !</p>
     <p v-if="tasksError" class="error-message">{{ tasksError }}</p>
   </div>
 </template>
