@@ -11,7 +11,7 @@
         </div>
       </div>
       <div class="header-actions">
-        <button @click="logout" class="btn-logout">⏻</button>
+        <button @click="logout" class="btn-logout" title="Deconnectez-vous">⏻</button>
       </div>
     </header>
 
@@ -26,7 +26,14 @@
         placeholder="Nouvelle tâche..."
         @keyup.enter="handleAddTask"
       />
-      <button @click="handleAddTask" :disabled="tasksLoading" class="btn-add">+</button>
+      <button
+        @click="handleAddTask"
+        :disabled="tasksLoading"
+        class="btn-add"
+        title="Ajouter la tâche"
+      >
+        +
+      </button>
     </div>
 
     <div class="filters">
@@ -273,7 +280,7 @@ onMounted(() => {
   background: none;
   border: none;
   font-size: 18px;
-  color: #ff4444;
+  color: #ff4d4d;
   cursor: pointer;
   margin-left: 8px;
 }
