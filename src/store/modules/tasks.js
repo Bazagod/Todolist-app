@@ -93,7 +93,7 @@ const actions = {
     try {
       await axios.delete(`/tasks/${taskId}`)
       commit('REMOVE_TASK', taskId)
-      console.log(`✅ Suppression réussie pour l’ID ${taskId}`)
+      console.log(` Suppression réussie pour l’ID ${taskId}`)
     } catch (err) {
       commit('SET_ERROR', err.response?.data?.message || 'Erreur lors de la suppression.')
     } finally {
